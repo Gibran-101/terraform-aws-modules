@@ -1,18 +1,19 @@
 output "instance_public_ip" {
-  description = "Public IP of the EC2 instance"
-  value       = aws_instance.web_server.public_ip
+ description = "Public IP address of the EC2 instance. This is the externally accessible IP that can be used to connect to the instance from the internet. Note: Public IP can change if the instance is stopped and started."
+ value       = aws_instance.web_server.public_ip
 }
 
 output "ssh_path" {
-  value = "ssh -i 'MyAWSKey.pem' ubuntu@${aws_instance.web_server.public_ip}"
+ description = "Complete SSH command to connect to the EC2 instance. Includes the private key path and default Ubuntu user. Use this command in your terminal to establish a secure shell connection to the server."
+ value = "ssh -i 'MyAWSKey.pem' ubuntu@${aws_instance.web_server.public_ip}"
 }
 
 output "ssh_key_path" {
-  description = "Path to the generated SSH private key"
-  value       = local_file.private_key.filename
+ description = "Filesystem path to the generated SSH private key file. This key is used for authenticating your connection to the EC2 instance. Keep this file secure and do not share it publicly."
+ value       = local_file.private_key.filename
 }
 
 output "instance_id" {
-  description = "ID of the created EC2 instance"
-  value       = aws_instance.web_server.id
+ description = "Unique identifier for the created EC2 instance within AWS. This ID is used for managing the instance through AWS CLI, console, or Terraform, and can be referenced in other AWS resource configurations."
+ value       = aws_instance.web_server.id
 }
