@@ -1,4 +1,3 @@
-
 # Generate TLS Private Key
 resource "tls_private_key" "ssh_key" {
   algorithm = "RSA"
@@ -8,9 +7,10 @@ resource "tls_private_key" "ssh_key" {
 # Create Local Private Key File
 resource "local_file" "private_key" {
   content         = tls_private_key.ssh_key.private_key_pem
-  filename        = "${path.module}/ssh_key.pem"
+  filename        = "${path.root}/.ssh/ssh_key.pem"
   file_permission = "0600"
 }
+
 
 # Generate Unique Suffix
 resource "random_string" "suffix" {
