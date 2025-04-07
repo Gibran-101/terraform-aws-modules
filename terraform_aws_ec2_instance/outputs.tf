@@ -17,3 +17,8 @@ output "instance_id" {
  description = "Unique identifier for the created EC2 instance within AWS. This ID is used for managing the instance through AWS CLI, console, or Terraform, and can be referenced in other AWS resource configurations."
  value       = aws_instance.web_server.id
 }
+
+output "private_key_path" {
+  description = "It prints the absolute file path to the generated .pem file"
+  value = abspath(local_file.private_key.filename)
+}
