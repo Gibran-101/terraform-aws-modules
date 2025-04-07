@@ -38,10 +38,11 @@ resource "aws_instance" "web_server" {
   subnet_id                   = module.vpc.public_subnets[0]
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
-  depends_on = [aws_key_pair.deployed_key]
+  depends_on                  = [aws_key_pair.deployed_key]
 
-
-  # Optional: Provisioner for initial setup
+  lifecycle {
+    create_before_destroy = true
+  }
 
   tags = {
     Name = "Web Server-${random_string.suffix.result}"
@@ -52,7 +53,7 @@ resource "null_resource" "fix_windows_key_perms" {
   count = local.is_windows ? 1 : 0
 
   provisioner "local-exec" {
-    command = <<EOT
+    command     = <<EOT
       icacls "ssh_key.pem" /inheritance:r
       icacls "ssh_key.pem" /grant:r "$($env:USERNAME):R"
       icacls "ssh_key.pem" /remove "Users"
@@ -65,7 +66,7 @@ resource "null_resource" "fix_linux_key_perms" {
   count = local.is_windows ? 0 : 1
 
   provisioner "local-exec" {
-    command = "chmod 400 ssh_key.pem"
+    command     = "chmod 400 ssh_key.pem"
     interpreter = ["bash", "-c"]
   }
 }
@@ -79,8 +80,8 @@ module "vpc" {
   name = "my-dynamic-vpc"
   cidr = "10.0.0.0/16"
 
-  azs             = [var.availability_zone]
-  public_subnets  = ["10.0.1.0/24"]
+  azs            = [var.availability_zone]
+  public_subnets = ["10.0.1.0/24"]
 
   enable_dns_hostnames = true
   enable_dns_support   = true
