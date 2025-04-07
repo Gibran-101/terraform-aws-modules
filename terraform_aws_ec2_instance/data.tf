@@ -16,6 +16,10 @@ data "aws_ami" "ubuntu" {
 
 #pulls public IP dynamically whenever instance is created.
 data "http" "my_ip" {
-  url = "http://ipv4.icanhazip.com"
+  url = "https://ipv4.icanhazip.com"
+  request_headers = {
+    Accept = "text/plain"
+  }
 }
+
 

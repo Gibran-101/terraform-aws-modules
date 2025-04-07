@@ -38,6 +38,8 @@ resource "aws_instance" "web_server" {
   subnet_id                   = module.vpc.public_subnets[0]
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
+  depends_on = [aws_key_pair.deployed_key]
+
 
   # Optional: Provisioner for initial setup
 
@@ -102,7 +104,9 @@ resource "aws_security_group" "ssh_access" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [chomp(data.http.my_ip.body)]
+    cidr_blocks = ["${trimspace(data.http.my_ip.response_body)}/32"]
+
+
   }
 
   # HTTP Access
