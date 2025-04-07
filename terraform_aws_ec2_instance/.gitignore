@@ -1,6 +1,7 @@
 .qodo
 .terraform.lock.hcl
 .terraform
-ssh_key.pem
+*.pem
+*.key
 terraform.tfstate
 terrraform.tfstate.backup
