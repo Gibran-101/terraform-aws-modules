@@ -1,0 +1,5 @@
+.qodo
+.terraform.lock.hcl
+.terraform
+ssh_key.pem
+terraform.tfstate

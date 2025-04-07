@@ -31,7 +31,7 @@ resource "aws_instance" "web_server" {
   instance_type = var.instance_type
   key_name      = aws_key_pair.deployed_key.key_name
 
-  subnet_id                   = aws_subnet.public.id
+  subnet_id                   = module.vpc.public_subnets[0]
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
 
@@ -56,63 +56,31 @@ resource "aws_instance" "web_server" {
 }
 
 # VPC Configuration
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.1.1" # use latest stable
+
+  name = "my-dynamic-vpc"
+  cidr = "10.0.0.0/16"
+
+  azs             = [var.availability_zone]
+  public_subnets  = ["10.0.1.0/24"]
 
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
-    Name = "Main VPC-${random_string.suffix.result}"
+    Environment = "dev"
+    Project     = "ec2-webserver"
   }
 }
 
-# Internet Gateway
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "Main IGW-${random_string.suffix.result}"
-  }
-}
-
-# Public Subnet
-resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = var.availability_zone
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "Public Subnet-${random_string.suffix.result}"
-  }
-}
-
-# Route Table
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-
-  tags = {
-    Name = "Public Route Table-${random_string.suffix.result}"
-  }
-}
-
-# Route Table Association
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
-}
 
 # Security Group
 resource "aws_security_group" "ssh_access" {
   name        = "ssh-access-${random_string.suffix.result}"
   description = "Allow SSH and web inbound traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
   # SSH Access
   ingress {
