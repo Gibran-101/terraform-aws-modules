@@ -5,7 +5,7 @@ output "instance_public_ip" {
 
 output "ssh_path" {
  description = "Complete SSH command to connect to the EC2 instance. Includes the private key path and default Ubuntu user. Use this command in your terminal to establish a secure shell connection to the server."
- value = "ssh -i 'MyAWSKey.pem' ubuntu@${aws_instance.web_server.public_ip}"
+ value = "ssh -i 'ssh_key.pem' ubuntu@${aws_instance.web_server.public_ip}"
 }
 
 output "ssh_key_path" {

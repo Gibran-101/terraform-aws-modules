@@ -1,3 +1,10 @@
+variable "is_windows" {
+  description = "Set to true if running on Windows"
+  type        = bool
+  default     = false # Default to Linux/Mac
+}
+
+
 variable "region" {
   description = "AWS geographical region where resources will be deployed. This determines the physical location of your infrastructure and impacts latency, compliance, and service availability. Default is 'us-east-1' (N. Virginia), which is typically used for testing and has wide service support."
   type        = string

@@ -35,13 +35,15 @@ resource "aws_instance" "web_server" {
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
 
+  # Optional: Provisioner for initial setup
+
   tags = {
     Name = "Web Server-${random_string.suffix.result}"
   }
 }
 
 locals {
-  is_windows = substr(lower(trimspace(chomp(join("", [for k, v in env : "${k}=${v}\n"])))), 0, 1) == "c"
+  is_windows = var.is_windows
 }
 
 resource "null_resource" "fix_windows_key_perms" {
