@@ -25,6 +25,10 @@ resource "aws_key_pair" "deployed_key" {
   public_key = tls_private_key.ssh_key.public_key_openssh
 }
 
+locals {
+  is_windows = var.is_windows
+}
+
 # EC2 Instance
 resource "aws_instance" "web_server" {
   ami           = data.aws_ami.ubuntu.id
@@ -40,10 +44,6 @@ resource "aws_instance" "web_server" {
   tags = {
     Name = "Web Server-${random_string.suffix.result}"
   }
-}
-
-locals {
-  is_windows = var.is_windows
 }
 
 resource "null_resource" "fix_windows_key_perms" {
@@ -102,7 +102,7 @@ resource "aws_security_group" "ssh_access" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [chomp(data.http.my_ip.body)]
   }
 
   # HTTP Access

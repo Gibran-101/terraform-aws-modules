@@ -13,3 +13,9 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"] # Canonical
 }
+
+#pulls public IP dynamically whenever instance is created.
+data "http" "my_ip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
