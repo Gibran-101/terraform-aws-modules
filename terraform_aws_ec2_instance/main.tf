@@ -50,6 +50,21 @@ resource "aws_instance" "web_server" {
     }
   }
 
+  provisioner "local-exec" {
+  when    = create
+  command = <<EOT
+    if ($IsWindows) {
+      icacls "ssh_key.pem" /inheritance:r
+      icacls "ssh_key.pem" /grant:r "$($env:USERNAME):R"
+      icacls "ssh_key.pem" /remove "Users"
+    } else {
+      chmod 400 ssh_key.pem
+    }
+  EOT
+  interpreter = ["PowerShell", "-Command"]
+}
+
+
   tags = {
     Name = "Web Server-${random_string.suffix.result}"
   }
