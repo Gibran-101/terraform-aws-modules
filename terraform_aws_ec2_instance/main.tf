@@ -35,40 +35,37 @@ resource "aws_instance" "web_server" {
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
 
-  # Optional: Provisioner for initial setup
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y docker.io"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.ssh_key.private_key_pem
-      host        = self.public_ip
-    }
-  }
-
-  provisioner "local-exec" {
-  when    = create
-  command = <<EOT
-    if ($IsWindows) {
-      icacls "ssh_key.pem" /inheritance:r
-      icacls "ssh_key.pem" /grant:r "$($env:USERNAME):R"
-      icacls "ssh_key.pem" /remove "Users"
-    } else {
-      chmod 400 ssh_key.pem
-    }
-  EOT
-  interpreter = ["PowerShell", "-Command"]
-}
-
-
   tags = {
     Name = "Web Server-${random_string.suffix.result}"
   }
 }
+
+locals {
+  is_windows = substr(lower(trimspace(chomp(join("", [for k, v in env : "${k}=${v}\n"])))), 0, 1) == "c"
+}
+
+resource "null_resource" "fix_windows_key_perms" {
+  count = local.is_windows ? 1 : 0
+
+  provisioner "local-exec" {
+    command = <<EOT
+      icacls "ssh_key.pem" /inheritance:r
+      icacls "ssh_key.pem" /grant:r "$($env:USERNAME):R"
+      icacls "ssh_key.pem" /remove "Users"
+    EOT
+    interpreter = ["PowerShell", "-Command"]
+  }
+}
+
+resource "null_resource" "fix_linux_key_perms" {
+  count = local.is_windows ? 0 : 1
+
+  provisioner "local-exec" {
+    command = "chmod 400 ssh_key.pem"
+    interpreter = ["bash", "-c"]
+  }
+}
+
 
 # VPC Configuration
 module "vpc" {
