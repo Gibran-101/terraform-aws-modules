@@ -29,6 +29,16 @@ locals {
   is_windows = var.is_windows
 }
 
+locals {
+  common_tags = {
+    Environment = "dev"
+    Project     = "ec2-webserver"
+    Owner       = "Gibran"
+    ManagedBy   = "Terraform"
+  }
+}
+
+
 # EC2 Instance
 resource "aws_instance" "web_server" {
   ami           = data.aws_ami.ubuntu.id
@@ -44,9 +54,12 @@ resource "aws_instance" "web_server" {
     create_before_destroy = true
   }
 
-  tags = {
-    Name = "Web Server-${random_string.suffix.result}"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "Web Server-${random_string.suffix.result}"
+    }
+  )
 }
 
 resource "null_resource" "fix_windows_key_perms" {
@@ -86,10 +99,13 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = {
-    Environment = "dev"
-    Project     = "ec2-webserver"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "VPC-${random_string.suffix.result}"
+    }
+  )
+
 }
 
 
@@ -136,8 +152,12 @@ resource "aws_security_group" "ssh_access" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "SSH Access Security Group-${random_string.suffix.result}"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "SSH Access Security Group-${random_string.suffix.result}"
+    }
+  )
+
 }
 
