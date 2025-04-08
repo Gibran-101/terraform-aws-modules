@@ -114,41 +114,48 @@ module "vpc" {
 
 
 # Security Group
+locals {
+  ingress_rules = [
+    {
+      description = "SSH from my IP"
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = ["${trimspace(data.http.my_ip.response_body)}/32"]
+    },
+    {
+      description = "HTTP from anywhere"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      description = "HTTPS from anywhere"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
+}
+
 resource "aws_security_group" "ssh_access" {
   name        = "ssh-access-${random_string.suffix.result}"
-  description = "Allow SSH and web inbound traffic"
+  description = "Allow SSH, HTTP, and HTTPS inbound traffic"
   vpc_id      = module.vpc.vpc_id
 
-  # SSH Access
-  ingress {
-    description = "SSH from anywhere"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = local.cidr
-
-
+  dynamic "ingress" {
+    for_each = local.ingress_rules
+    content {
+      description = ingress.value.description
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      cidr_blocks = ingress.value.cidr_blocks
+    }
   }
 
-  # HTTP Access
-  ingress {
-    description = "HTTP from anywhere"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = local.cidr
-  }
-
-  # HTTPS Access
-  ingress {
-    description = "HTTPS from anywhere"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Outbound Internet Access
   egress {
     from_port   = 0
     to_port     = 0
@@ -162,6 +169,6 @@ resource "aws_security_group" "ssh_access" {
       Name = "SSH Access Security Group-${random_string.suffix.result}"
     }
   )
-
 }
+
 
