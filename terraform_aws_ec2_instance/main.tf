@@ -71,9 +71,9 @@ resource "null_resource" "fix_windows_key_perms" {
 
   provisioner "local-exec" {
     command     = <<EOT
-      icacls "ssh_key.pem" /inheritance:r
-      icacls "ssh_key.pem" /grant:r "$($env:USERNAME):R"
-      icacls "ssh_key.pem" /remove "Users"
+      icacls ".ssh/ssh_key.pem" /inheritance:r
+      icacls ".ssh/ssh_key.pem" /grant:r "$($env:USERNAME):R"
+      icacls ".ssh/ssh_key.pem" /remove "Users"
     EOT
     interpreter = ["PowerShell", "-Command"]
   }
