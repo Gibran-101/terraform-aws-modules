@@ -6,10 +6,17 @@ resource "tls_private_key" "ssh_key" {
 
 # Create Local Private Key File
 resource "local_file" "private_key" {
+  filename        = "${path.module}/.ssh/ssh_key.pem"
   content         = tls_private_key.ssh_key.private_key_pem
-  filename        = "${path.root}/.ssh/ssh_key.pem"
   file_permission = "0600"
+
+  lifecycle {
+    replace_triggered_by = [
+      tls_private_key.ssh_key.private_key_pem
+    ]
+  }
 }
+
 
 
 # Generate Unique Suffix
@@ -65,15 +72,18 @@ resource "aws_instance" "web_server" {
 resource "null_resource" "fix_windows_key_perms" {
   count = local.is_windows ? 1 : 0
 
+  depends_on = [local_file.private_key] # Ensure the file exists
+
   provisioner "local-exec" {
-    command     = <<EOT
-      icacls ".ssh/ssh_key.pem" /inheritance:r
-      icacls ".ssh/ssh_key.pem" /grant:r "$($env:USERNAME):R"
-      icacls ".ssh/ssh_key.pem" /remove "Users"
+    command = <<EOT
+      icacls "${path.module}\\.ssh\\ssh_key.pem" /inheritance:r
+      icacls "${path.module}\\.ssh\\ssh_key.pem" /grant:r "$($env:USERNAME):R"
+      icacls "${path.module}\\.ssh\\ssh_key.pem" /remove "Users"
     EOT
     interpreter = ["PowerShell", "-Command"]
   }
 }
+
 
 resource "null_resource" "fix_linux_key_perms" {
   count = local.is_windows ? 0 : 1
