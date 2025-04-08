@@ -27,18 +27,14 @@ resource "aws_key_pair" "deployed_key" {
 
 locals {
   is_windows = var.is_windows
-}
 
-locals {
   common_tags = {
     Environment = "dev"
     Project     = "ec2-webserver"
     Owner       = "Gibran"
     ManagedBy   = "Terraform"
   }
-}
 
-locals {
   cidr = ["${trimspace(data.http.my_ip.response_body)}/32"]
 }
 
