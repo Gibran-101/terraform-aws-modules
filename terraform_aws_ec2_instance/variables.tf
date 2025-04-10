@@ -22,3 +22,23 @@ variable "instance_type" {
   type        = string
   default     = "t2.micro"
 }
+
+variable "allowed_ports" {
+  description = "List of allowed ports with CIDR blocks"
+  type = list(object({
+    description = string
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      description = "SSH access from anywhere"
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = ["${trimspace(data.http.my_ip.response_body)}/32"]
+    }
+  ]
+}

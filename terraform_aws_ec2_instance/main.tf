@@ -75,7 +75,7 @@ resource "null_resource" "fix_windows_key_perms" {
   depends_on = [local_file.private_key] # Ensure the file exists
 
   provisioner "local-exec" {
-    command = <<EOT
+    command     = <<EOT
       icacls "${path.module}\\.ssh\\ssh_key.pem" /inheritance:r
       icacls "${path.module}\\.ssh\\ssh_key.pem" /grant:r "$($env:USERNAME):R"
       icacls "${path.module}\\.ssh\\ssh_key.pem" /remove "Users"
@@ -134,25 +134,25 @@ locals {
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["${trimspace(data.http.my_ip.response_body)}/32"]
     },
     {
       description = "HTTPS from anywhere"
       from_port   = 443
       to_port     = 443
       protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["${trimspace(data.http.my_ip.response_body)}/32"]
     }
   ]
 }
 
-resource "aws_security_group" "ssh_access" {
+resource "aws_security_group" "ec2_sg" {
   name        = "ssh-access-${random_string.suffix.result}"
-  description = "Allow SSH, HTTP, and HTTPS inbound traffic"
-  vpc_id      = module.vpc.vpc_id
+  description = "Security group for EC2 instance"
+  vpc_id      = module.vpc.default_vpc_id
 
   dynamic "ingress" {
-    for_each = local.ingress_rules
+    for_each = var.allowed_ports
     content {
       description = ingress.value.description
       from_port   = ingress.value.from_port
